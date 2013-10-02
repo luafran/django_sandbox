@@ -1,0 +1,48 @@
+
+https://docs.djangoproject.com/en/1.6/topics/auth/default/
+
+Create Users
+
+See Django documentation
+
+Force Login
+
+For example, if app1/protected view has login_required decorator and LOGIN_URL is /app1/login, when trying
+to access /app1/protected will responde with a redirect to http://localhost:8000/app1/login?next=/app1/protected
+
+Login view (usually when a POST request is received) should authenticate and login the user.
+
+
+from django.contrib.auth import authenticate, login, logout
+
+class LoginView(View):
+    (get username and password from request)
+
+    user = authenticate(username=username, password=password)
+        if user is not None:
+            if user.is_active:
+                login(request, user)
+                # Redirect to a success page.
+                next_url = request.GET.get('next', None)
+                response = {'next_url': next_url}
+                resp = JSONResponse(response, status=301)
+                resp['Location'] = next_url
+                return resp
+
+            else:
+                # Return a 'disabled account' error message
+                response = {'error': 2, 'msg': 'User account is disabled'}
+                return JSONResponse(response, status=401)
+        else:
+            # Return an 'invalid login' error message.
+            response = {'error': 3, 'msg': 'Invalid user/password pair'}
+            return JSONResponse(response, status=401)
+
+When django.contrib.auth.authenticate() is called, it will call authenticate method in all AUTHENTICATION_BACKENDS
+backends configured in django settings file until one of them return a user.
+
+AUTHENTICATION_BACKENDS = ( 'authbe.sessionauthentication.CustomAuthBE', )
+
+authenticate method receives username and password and should return an instance of django.contrib.auth.models.User )
+
+See app1.views.LoginView and authbe.sessionauthentication.CustomAuthBE

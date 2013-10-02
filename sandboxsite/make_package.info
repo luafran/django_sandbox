@@ -1,0 +1,7 @@
+[make_package]
+PACKAGE_NAME="sandboxsite"
+PACKAGE_COPY=( * )
+PACKAGE_REMOVE=( make_package.info  )
+
+[install]
+INSTALL="yes"

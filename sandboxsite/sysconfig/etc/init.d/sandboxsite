@@ -1,0 +1,80 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:     mml-portal servers
+# Required-Start:   $syslog
+# Required-Stop:    $syslog
+# Default-Start:    2 3 4 5
+# Default-Stop:     0 1 6
+### END INIT INFO
+
+set -e
+
+site_name="sandboxsite"
+sites_dir=/var/sites
+site_dir=$sites_dir/$site_name
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+#venvs_dir=$sites_dir/venvs
+venvs_dir=$WORKON_HOME
+user=www-data
+group=www-data
+log_dir=/var/log/sites
+run_dir=/var/run/sites
+pid_file=$run_dir/unicorn_$site_name.pid
+log_file=$log_dir/unicorn_$site_name.log
+
+test_dirs()
+{
+    if [ ! -d $run_dir ]; then
+        echo "run dir $run_dir does not exist. Aborting"
+        exit 1
+    fi
+
+    if [ ! -d $log_dir ]; then
+        echo "log dir $log_dir does not exist. Aborting"
+        exit 1
+    fi
+}
+
+case "$1" in
+    start)
+        test_dirs
+        #just in case.... tune later on production
+        sysctl -w net.core.somaxconn=20000
+        echo "Starting $site_name"
+        cd $site_dir
+        scripts/run_server.sh $venvs_dir $user $group $pid_file $log_file
+        echo "Server started - Check output"
+        ;;
+    stop)
+        if [ ! -e $pid_file ]; then
+            echo "PID file $pid_file not found. Exiting"
+            exit 0
+        fi
+        echo "Stopping $site_name"
+        UNICORN_PID=`cat $pid_file`
+        echo "Killing [$UNICORN_PID]"
+        set +e
+        kill -9 $UNICORN_PID 
+        set -e
+        rm $pid_file
+        ;;
+
+    pidrestart)
+        kill -HUP `cat $pid_file`
+	    echo " Restart by signal"
+        ;;
+		
+    restart|force-reload)
+        ${0} stop
+        ${0} start
+        ;;
+    *)
+        echo "Usage: /etc/init.d/$NAME {start|stop|restart|force-reload}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
+

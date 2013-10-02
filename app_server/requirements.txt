@@ -1,0 +1,6 @@
+gunicorn
+Django
+djangorestframework
+django-filter
+MySQL-python
+South

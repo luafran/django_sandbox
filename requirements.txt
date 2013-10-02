@@ -1,0 +1,12 @@
+Django
+South
+argparse
+defusedxml
+django-filter
+django-oauth-plus
+django-oauth2-provider
+djangorestframework
+gunicorn
+oauth2
+pymongo
+shortuuid
